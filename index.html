@@ -179,14 +179,14 @@ body.song #song{display:block}
 
     <label for="cFmt">Formato da mensagem</label>
     <input type="text" id="cFmt" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <div class="hint">Use {musica}, {artista} e {palavra}. Fica tudo numa linha só, porque o Inject só mostra a primeira linha.</div>
+    <div class="hint">Use {musica}, {artista} e {palavra}. Fica tudo numa linha só. Para o MindtoneX, mantenha o ▸ antes de {palavra}: é ele que separa a música da palavra.</div>
 
     <label for="cMs">Tempo do toque longo (milissegundos)</label>
     <input type="number" id="cMs" inputmode="numeric" min="200" max="1500" step="50">
 
     <div class="row"><span>Mostrar o que foi enviado (teste)</span><input type="checkbox" id="cTest"></div>
     <div class="row"><span>Palavra em MAIÚSCULAS</span><input type="checkbox" id="cUpper"></div>
-    <div class="row"><span>Enviar em 2 notificações (música, depois a palavra)</span><input type="checkbox" id="cDuas"></div>
+    <div class="row"><span>Enviar em 2 notificações (música; 5 s depois, ✱ palavra)</span><input type="checkbox" id="cDuas"></div>
 
     <div class="btns">
       <button class="btn" id="bTest">Enviar teste</button>
@@ -202,7 +202,7 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.0.1";
+var VERSAO = "1.0.2";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
@@ -384,7 +384,7 @@ function escolher(w){
   if(CFG.maiusculas) palavra = palavra.toLocaleUpperCase("pt-BR");
   if(CFG.duasNotificacoes){
     postar(atual.trackName + " – " + atual.artistName);
-    setTimeout(function(){ postar(palavra); }, 1500);
+    setTimeout(function(){ postar("✱ " + palavra); }, 5000);   // ✱ = o MindtoneX entende que é a palavra, não música
   } else {
     postar(montar(atual.trackName, atual.artistName, palavra).replace(/\s*\n+\s*/g, " ▸ "));
   }
