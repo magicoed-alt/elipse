@@ -203,7 +203,7 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.1.0";
+var VERSAO = "1.1.1";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
@@ -245,6 +245,10 @@ function postar(texto, tentativa){
 /* ---------- palavra para o Telegram (o MindtoneX lê a mensagem fixada) ---------- */
 function telegram(palavra){
   var base = "https://api.telegram.org/bot" + TG.token + "/";
+  // 1) grava a palavra na descrição curta do robô (o MindtoneX lê daí; não precisa ler resposta)
+  fetch(base + "setMyShortDescription?short_description=" + encodeURIComponent(palavra),
+        {mode:"no-cors", cache:"no-store", referrerPolicy:"no-referrer"}).catch(function(){});
+  // 2) manda a mensagem (notificação no Telegram) e tenta fixá-la
   var url = base + "sendMessage?chat_id=" + TG.chat + "&text=" + encodeURIComponent(palavra);
   fetch(url, {cache:"no-store", referrerPolicy:"no-referrer"})
   .then(function(r){ return r.json(); })
