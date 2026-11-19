@@ -187,6 +187,7 @@ body.song #song{display:block}
     <div class="row"><span>Mostrar o que foi enviado (teste)</span><input type="checkbox" id="cTest"></div>
     <div class="row"><span>Palavra em MAIÚSCULAS</span><input type="checkbox" id="cUpper"></div>
     <div class="row"><span>Palavra pelo Telegram (música no Inject)</span><input type="checkbox" id="cTg"></div>
+    <div class="row"><span>Telegram: mandar também mensagem (com notificação)</span><input type="checkbox" id="cTgMsg"></div>
     <div class="row"><span>Enviar em 2 notificações (música; 5 s depois, ✱ palavra)</span><input type="checkbox" id="cDuas"></div>
 
     <div class="btns">
@@ -203,7 +204,7 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.1.1";
+var VERSAO = "1.2.0";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
@@ -213,6 +214,7 @@ var PADRAO = {
   teste: false,                                       // mostra na tela o que foi enviado
   maiusculas: true,                                   // palavra em MAIÚSCULAS
   novasTentativas: 3,
+  tgMensagem: false,                                  // true = também manda mensagem (com notificação) e fixa no Telegram
   telegram: true                                      // true = música no Inject e palavra no Telegram (robô @versoed_bot)
 };
 var TG = { token: "9218844981:AAFYmYdG6sG7LBEvgn2MjzLVesNbZhUegZw", chat: "1231043433" };
@@ -248,7 +250,8 @@ function telegram(palavra){
   // 1) grava a palavra na descrição curta do robô (o MindtoneX lê daí; não precisa ler resposta)
   fetch(base + "setMyShortDescription?short_description=" + encodeURIComponent(palavra),
         {mode:"no-cors", cache:"no-store", referrerPolicy:"no-referrer"}).catch(function(){});
-  // 2) manda a mensagem (notificação no Telegram) e tenta fixá-la
+  if(!CFG.tgMensagem){ if(CFG.teste) toast("TELEGRAM (sem mensagem) ▸\n"+palavra); return; }
+  // 2) (opcional) manda a mensagem no Telegram e tenta fixá-la
   var url = base + "sendMessage?chat_id=" + TG.chat + "&text=" + encodeURIComponent(palavra);
   fetch(url, {cache:"no-store", referrerPolicy:"no-referrer"})
   .then(function(r){ return r.json(); })
@@ -443,7 +446,7 @@ function abrirAjustes(){
   $("ver").textContent = "VERSO · versão " + VERSAO;
   $("cUrl").value = CFG.url; $("cFmt").value = CFG.formato; $("cMs").value = CFG.toqueLongo;
   $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas; $("cDuas").checked = !!CFG.duasNotificacoes;
-  $("cTg").checked = !!CFG.telegram;
+  $("cTg").checked = !!CFG.telegram; $("cTgMsg").checked = !!CFG.tgMensagem;
   $("sheet").classList.add("on");
 }
 function lerAjustes(){
@@ -451,7 +454,7 @@ function lerAjustes(){
   CFG.formato = $("cFmt").value || PADRAO.formato;
   CFG.toqueLongo = Math.min(1500, Math.max(200, parseInt($("cMs").value,10) || PADRAO.toqueLongo));
   CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked; CFG.duasNotificacoes = $("cDuas").checked;
-  CFG.telegram = $("cTg").checked;
+  CFG.telegram = $("cTg").checked; CFG.tgMensagem = $("cTgMsg").checked;
   salvar();
 }
 $("bClose").addEventListener("click", function(){ lerAjustes(); $("sheet").classList.remove("on"); });
