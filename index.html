@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>VERSO · Letras de músicas</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VERSO">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<style>
+:root{
+  --bg:#ffffff; --fg:#111113; --muted:#6b6b73; --line:#e7e7ea; --card:#f5f5f7;
+  --accent:#00c2a8; --accent-ink:#00382f; --head:#0b0b0c; --sel:rgba(0,122,255,.28);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#121214; --fg:#f2f2f4; --muted:#9a9aa3; --line:#2a2a2e; --card:#1c1c1f; --sel:rgba(10,132,255,.45); }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-text-size-adjust:100%}
+body{min-height:100vh;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+
+/* ---------- Topo ---------- */
+.top{position:sticky;top:0;z-index:20;background:var(--head);color:#fff;
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:7px;font-weight:900;letter-spacing:.14em;font-size:19px;user-select:none;-webkit-user-select:none}
+.logo .q{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--accent-ink);
+  font-family:Georgia,serif;font-size:24px;line-height:1;padding-top:9px;letter-spacing:0}
+.top .sp{flex:1}
+.top .ic{width:34px;height:34px;display:grid;place-items:center;border-radius:50%}
+.top .ic:active{background:rgba(255,255,255,.12)}
+.top .back{display:none}
+body.song .top .back{display:grid}
+input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+
+/* ---------- Início / busca ---------- */
+.hero{background:var(--head);color:#fff;padding:18px 16px 22px}
+.hero h1{margin:0 0 4px;font-size:28px;line-height:1.08;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0 0 16px;color:#a7a7ae;font-size:15px}
+.sbox{display:flex;align-items:center;gap:8px;background:#fff;color:#111;border-radius:12px;padding:0 12px;height:48px}
+.sbox svg{flex:none;opacity:.55}
+.sbox input{flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:17px;color:#111;height:100%;min-width:0}
+.sbox input::placeholder{color:#8d8d94}
+.sbox .clr{display:none;width:22px;height:22px;border-radius:50%;background:#c7c7cc;color:#fff;font-size:14px;line-height:22px;text-align:center}
+.sbox.has .clr{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:4px 16px 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600;color:var(--fg);background:var(--bg)}
+.chip:active{background:var(--card)}
+.sec{padding:16px 16px 6px;font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.list{list-style:none;margin:0;padding:0 0 40px}
+.item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.item:active{background:var(--card)}
+.art{flex:none;width:50px;height:50px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;letter-spacing:.02em}
+.meta{min-width:0;flex:1}
+.meta b{display:block;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta span{display:block;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.state{padding:30px 16px;text-align:center;color:var(--muted);font-size:15px}
+.spin{width:22px;height:22px;border:2.5px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:r .8s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+
+/* ---------- Página da música ---------- */
+#song{display:none}
+body.song #home{display:none}
+body.song #song{display:block}
+.shead{position:relative;color:#fff;padding:22px 16px 20px;overflow:hidden}
+.shead .bgc{position:absolute;inset:0;opacity:1}
+.shead .bgc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.6))}
+.shead .in{position:relative;display:flex;gap:14px;align-items:flex-end}
+.shead .cover{flex:none;width:96px;height:96px;border-radius:10px;display:grid;place-items:center;font-size:34px;font-weight:900;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18)}
+.shead h2{margin:0;font-size:25px;line-height:1.1;font-weight:800;letter-spacing:-.01em}
+.shead .ar{margin-top:6px;font-size:16px;font-weight:600;opacity:.95}
+.shead .al{margin-top:4px;font-size:13px;opacity:.75}
+.tabs{display:flex;gap:18px;padding:0 16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:700}
+.tabs span{padding:12px 0;color:var(--muted)}
+.tabs span.on{color:var(--fg);box-shadow:inset 0 -2.5px 0 var(--accent)}
+.lyr{padding:18px 18px 10px;font-family:var(--serif);font-size:19px;line-height:1.62;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-y}
+.lyr .st{margin:0 0 1.05em}
+.lyr .ln{display:block}
+.w{border-radius:3px;transition:background .12s}
+.w.sel{background:var(--sel);box-shadow:0 0 0 2px var(--sel)}
+.credit{padding:6px 18px 50px;font-size:12px;color:var(--muted)}
+.credit a{color:inherit}
+
+/* balão estilo iOS ao selecionar */
+.callout{position:fixed;z-index:40;display:none;transform:translate(-50%,-100%);background:#2c2c2e;color:#fff;border-radius:9px;
+  font-family:var(--font);font-size:15px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.callout.on{display:flex}
+.callout button{padding:9px 13px;color:#fff}
+.callout button+button{border-left:1px solid rgba(255,255,255,.18)}
+.callout::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#2c2c2e}
+.callout.below{transform:translate(-50%,0)}
+.callout.below::after{bottom:auto;top:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#2c2c2e}
+
+/* ---------- Ajustes secretos ---------- */
+.sheet{position:fixed;inset:0;z-index:60;display:none;background:rgba(0,0,0,.45)}
+.sheet.on{display:block}
+.panel{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 18px);
+  max-height:88vh;overflow:auto;font-size:15px}
+.panel h3{margin:0 0 2px;font-size:19px}
+.panel .ver{color:var(--muted);font-size:13px;margin-bottom:14px}
+.panel label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:12px 0 5px}
+.panel input[type=text],.panel input[type=number],.panel textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:15px;background:var(--card);color:var(--fg)}
+.panel textarea{height:72px;resize:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.btns{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;height:46px;border-radius:11px;background:var(--card);font-weight:700}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:70;background:#0b0b0c;color:#7ff5de;
+  font:13px/1.4 ui-monospace,Menlo,monospace;padding:10px 12px;border-radius:10px;white-space:pre-wrap;display:none}
+.toast.on{display:block}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="ic back" id="btnBack" aria-label="Voltar">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <div class="logo" id="logo"><span class="q">“</span><span class="t">VERSO</span></div>
+  <div class="sp"></div>
+  <button class="ic" id="btnSearch" aria-label="Buscar">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+  </button>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <h1>A letra de qualquer música.</h1>
+    <p>Milhões de canções, de todos os estilos.</p>
+    <div class="sbox" id="sbox">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input id="q" type="search" placeholder="Música ou artista" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <button class="clr" id="clr" aria-label="Limpar">✕</button>
+    </div>
+  </section>
+  <div class="sec" id="secTitle">Buscas populares</div>
+  <div class="chips" id="chips"></div>
+  <ul class="list" id="list"></ul>
+  <div id="state"></div>
+</main>
+
+<main id="song">
+  <section class="shead">
+    <div class="bgc" id="sBg"></div>
+    <div class="in">
+      <div class="cover" id="sCover"></div>
+      <div>
+        <h2 id="sTitle"></h2>
+        <div class="ar" id="sArtist"></div>
+        <div class="al" id="sAlbum"></div>
+      </div>
+    </div>
+  </section>
+  <div class="tabs"><span class="on">Letra</span><span>Sobre</span><span>Créditos</span></div>
+  <article class="lyr" id="lyr"></article>
+  <div class="credit">Letra fornecida por <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a></div>
+</main>
+
+<div class="callout" id="callout"><button>Copiar</button><button>Buscar</button><button>Compartilhar…</button></div>
+
+<div class="sheet" id="sheet">
+  <div class="panel">
+    <h3>Ajustes</h3>
+    <div class="ver" id="ver"></div>
+
+    <label for="cUrl">Endereço do Inject</label>
+    <input type="text" id="cUrl" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+    <label for="cFmt">Formato da mensagem</label>
+    <textarea id="cFmt" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    <div class="hint">Use {musica}, {artista} e {palavra}. Cada quebra de linha vai para a notificação.</div>
+
+    <label for="cMs">Tempo do toque longo (milissegundos)</label>
+    <input type="number" id="cMs" inputmode="numeric" min="200" max="1500" step="50">
+
+    <div class="row"><span>Mostrar o que foi enviado (teste)</span><input type="checkbox" id="cTest"></div>
+    <div class="row"><span>Palavra em MAIÚSCULAS</span><input type="checkbox" id="cUpper"></div>
+
+    <div class="btns">
+      <button class="btn" id="bTest">Enviar teste</button>
+      <button class="btn" id="bReset">Padrão</button>
+      <button class="btn pri" id="bClose">Fechar</button>
+    </div>
+    <div class="hint">Para abrir estes ajustes: toque 3 vezes rápido no logo. Os ajustes ficam salvos neste aparelho.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
+   ========================================================= */
+var VERSAO = "1.0.0";
+
+var PADRAO = {
+  url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
+  formato: "{musica} – {artista}\n\n{palavra}",       // o que chega na notificação
+  toqueLongo: 450,                                    // ms segurando a palavra
+  teste: false,                                       // mostra na tela o que foi enviado
+  maiusculas: true,                                   // palavra em MAIÚSCULAS
+  novasTentativas: 3
+};
+var API_LETRAS = "https://lrclib.net/api/search?q=";
+var POPULARES = ["Evidências","Garota de Ipanema","Imagine","Bohemian Rhapsody","Aquarela","Tempo Perdido","Perfect","Trem-Bala"];
+
+/* ---------- ajustes salvos ---------- */
+var CFG = Object.assign({}, PADRAO);
+try{ var s = JSON.parse(localStorage.getItem("verso.cfg")||"null"); if(s) Object.assign(CFG, s); }catch(e){}
+if(location.hash.indexOf("teste")>-1) CFG.teste = true;
+function salvar(){ try{ localStorage.setItem("verso.cfg", JSON.stringify(CFG)); }catch(e){} }
+
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------- envio ao Inject ---------- */
+function postar(texto, tentativa){
+  tentativa = tentativa||1;
+  var corpo = JSON.stringify({value: texto});
+  fetch(CFG.url, {method:"POST", cache:"no-store", keepalive:true, referrerPolicy:"no-referrer",
+    headers:{"Content-Type":"application/json"}, body:corpo})
+  .catch(function(){
+    fetch(CFG.url, {method:"POST", mode:"no-cors", cache:"no-store", keepalive:true, referrerPolicy:"no-referrer",
+      headers:{"Content-Type":"text/plain;charset=UTF-8"}, body:corpo})
+    .catch(function(){
+      if(tentativa < CFG.novasTentativas) setTimeout(function(){ postar(texto, tentativa+1); }, 800*tentativa);
+    });
+  });
+  if(CFG.teste) toast("ENVIADO ▸\n"+texto);
+}
+function montar(musica, artista, palavra){
+  return CFG.formato.replace(/\{musica\}/g, musica).replace(/\{artista\}/g, artista).replace(/\{palavra\}/g, palavra);
+}
+
+var tT;
+function toast(t){ var el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(tT); tT=setTimeout(function(){el.classList.remove("on");}, 3500); }
+
+/* ---------- cores das capas ---------- */
+var PALETA = [["#ff5f6d","#ffc371"],["#00c2a8","#0b6e99"],["#7f5af0","#2cb67d"],["#f72585","#7209b7"],["#ff9f1c","#e71d36"],
+              ["#3a86ff","#8338ec"],["#06d6a0","#118ab2"],["#ef476f","#073b4c"],["#f4a261","#264653"],["#8ac926","#1982c4"]];
+function hash(s){ var h=0; for(var i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))|0; } return Math.abs(h); }
+function grad(s){ var p=PALETA[hash(s)%PALETA.length]; return "linear-gradient(135deg,"+p[0]+","+p[1]+")"; }
+function iniciais(s){ var p=(s||"").replace(/[^\p{L}\p{N} ]/gu,"").trim().split(/\s+/); return ((p[0]||"?")[0] + ((p[1]||"")[0]||"")).toUpperCase(); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function dur(sec){ if(!sec) return ""; sec=Math.round(sec); return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0"); }
+
+/* ---------- busca ---------- */
+var resultados = [], ctrl = null, tBusca = null, ultimaBusca = "";
+var q = $("q"), list = $("list"), state = $("state");
+
+function chips(){
+  $("chips").innerHTML = POPULARES.map(function(p){ return '<button class="chip">'+esc(p)+'</button>'; }).join("");
+}
+$("chips").addEventListener("click", function(e){
+  var b = e.target.closest(".chip"); if(!b) return;
+  q.value = b.textContent; $("sbox").classList.add("has"); buscar(q.value, true);
+});
+
+function setState(html){ state.innerHTML = html ? '<div class="state">'+html+'</div>' : ""; }
+
+function buscar(txt, ja){
+  txt = txt.trim();
+  clearTimeout(tBusca);
+  if(txt.length < 2){ list.innerHTML=""; setState(""); $("secTitle").textContent="Buscas populares"; $("chips").style.display=""; return; }
+  tBusca = setTimeout(function(){ executar(txt); }, ja ? 0 : 450);
+}
+function executar(txt){
+  if(txt === ultimaBusca && resultados.length) return;
+  ultimaBusca = txt;
+  if(ctrl) try{ ctrl.abort(); }catch(e){}
+  ctrl = ("AbortController" in window) ? new AbortController() : null;
+  $("chips").style.display="none";
+  $("secTitle").textContent = "Resultados";
+  list.innerHTML = ""; setState('<div class="spin"></div>Buscando…');
+  fetch(API_LETRAS + encodeURIComponent(txt), ctrl ? {signal: ctrl.signal} : {})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(dados){
+      if(txt !== ultimaBusca) return;
+      var vistos = {}; resultados = [];
+      (dados||[]).forEach(function(t){
+        if(t.instrumental || !t.plainLyrics || !t.plainLyrics.trim()) return;
+        var k = (t.trackName+"|"+t.artistName).toLowerCase().replace(/\s+/g," ").trim();
+        if(vistos[k]) return; vistos[k]=1; resultados.push(t);
+      });
+      resultados = resultados.slice(0, 15);
+      desenharLista();
+    })
+    .catch(function(e){
+      if(e && e.name === "AbortError") return;
+      ultimaBusca = "";
+      setState("Não foi possível buscar agora.<br>Verifique a internet e tente de novo.");
+    });
+}
+function desenharLista(){
+  if(!resultados.length){ list.innerHTML=""; setState("Nenhuma letra encontrada.<br>Tente o nome da música e do artista."); return; }
+  setState("");
+  list.innerHTML = resultados.map(function(t,i){
+    var sub = esc(t.artistName) + (t.albumName ? " · " + esc(t.albumName) : "");
+    return '<li class="item" data-i="'+i+'"><div class="art" style="background:'+grad(t.artistName+t.albumName)+'">'+esc(iniciais(t.trackName))+'</div>'+
+           '<div class="meta"><b>'+esc(t.trackName)+'</b><span>'+sub+'</span></div></li>';
+  }).join("");
+}
+q.addEventListener("input", function(){ $("sbox").classList.toggle("has", !!q.value); buscar(q.value); });
+q.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); q.blur(); buscar(q.value, true); } });
+$("clr").addEventListener("click", function(){ q.value=""; $("sbox").classList.remove("has"); resultados=[]; ultimaBusca=""; buscar(""); q.focus(); });
+$("btnSearch").addEventListener("click", function(){ if(document.body.classList.contains("song")) history.back(); setTimeout(function(){ window.scrollTo(0,0); q.focus(); }, 60); });
+list.addEventListener("click", function(e){
+  var li = e.target.closest(".item"); if(!li) return;
+  abrir(resultados[+li.dataset.i], true);
+});
+
+/* ---------- página da letra ---------- */
+var atual = null;
+function abrir(t, empurrar){
+  atual = t;
+  fecharBalao();
+  var g = grad(t.artistName+t.albumName);
+  $("sBg").style.background = g; $("sCover").style.background = g;
+  $("sCover").textContent = iniciais(t.trackName);
+  $("sTitle").textContent = t.trackName;
+  $("sArtist").textContent = t.artistName;
+  $("sAlbum").textContent = [t.albumName, dur(t.duration)].filter(Boolean).join(" · ");
+  var estrofes = t.plainLyrics.replace(/\r/g,"").trim().split(/\n\s*\n/);
+  $("lyr").innerHTML = estrofes.map(function(est){
+    return '<div class="st">' + est.split("\n").map(function(linha){
+      return '<span class="ln">' + linha.split(/(\s+)/).map(function(tok){
+        if(!tok) return "";
+        if(/^\s+$/.test(tok)) return " ";
+        return '<span class="w">'+esc(tok)+'</span>';
+      }).join("") + '</span>';
+    }).join("") + '</div>';
+  }).join("");
+  document.body.classList.add("song");
+  window.scrollTo(0,0);
+  document.title = t.trackName + " – " + t.artistName + " · VERSO";
+  if(empurrar) history.pushState({s:1}, "");
+}
+function voltar(){
+  fecharBalao();
+  document.body.classList.remove("song");
+  document.title = "VERSO · Letras de músicas";
+}
+window.addEventListener("popstate", voltar);
+$("btnBack").addEventListener("click", function(){ history.back(); });
+
+/* ---------- toque longo na palavra ---------- */
+var lyr = $("lyr"), tLongo = null, alvo = null, x0 = 0, y0 = 0, selecionada = null;
+
+function limpar(p){ // tira pontuação das pontas, mantém apóstrofo e hífen internos
+  return p.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+}
+function cancelar(){ clearTimeout(tLongo); tLongo = null; alvo = null; }
+
+lyr.addEventListener("pointerdown", function(e){
+  var w = e.target.closest(".w"); if(!w) return;
+  cancelar(); alvo = w; x0 = e.clientX; y0 = e.clientY;
+  tLongo = setTimeout(function(){ escolher(w); }, CFG.toqueLongo);
+});
+lyr.addEventListener("pointermove", function(e){
+  if(tLongo && (Math.abs(e.clientX-x0) > 10 || Math.abs(e.clientY-y0) > 10)) cancelar();
+});
+["pointerup","pointercancel","pointerleave"].forEach(function(ev){ lyr.addEventListener(ev, function(){ if(tLongo) cancelar(); }); });
+lyr.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+window.addEventListener("scroll", function(){ if(tLongo) cancelar(); fecharBalao(); }, {passive:true});
+
+function escolher(w){
+  tLongo = null;
+  var palavra = limpar(w.textContent);
+  if(!palavra || !atual) return;
+  if(selecionada) selecionada.classList.remove("sel");
+  w.classList.add("sel"); selecionada = w;
+  mostrarBalao(w);
+  if(CFG.maiusculas) palavra = palavra.toLocaleUpperCase("pt-BR");
+  postar(montar(atual.trackName, atual.artistName, palavra));
+}
+function mostrarBalao(w){
+  var r = w.getBoundingClientRect(), c = $("callout");
+  var x = Math.min(Math.max(r.left + r.width/2, 120), window.innerWidth - 120);
+  var emCima = r.top > 110;
+  c.classList.toggle("below", !emCima);
+  c.style.left = x + "px";
+  c.style.top = (emCima ? r.top - 10 : r.bottom + 10) + "px";
+  c.classList.add("on");
+}
+function fecharBalao(){
+  $("callout").classList.remove("on");
+}
+$("callout").addEventListener("click", function(){ fecharBalao(); if(selecionada){ selecionada.classList.remove("sel"); selecionada=null; } });
+document.addEventListener("pointerdown", function(e){
+  if(!e.target.closest(".callout") && !e.target.closest(".w.sel")){
+    fecharBalao();
+    if(selecionada && !e.target.closest(".lyr")){ selecionada.classList.remove("sel"); selecionada=null; }
+  }
+});
+
+/* ---------- ajustes secretos: 3 toques no logo ---------- */
+var toques = [], logo = $("logo");
+logo.addEventListener("click", function(){
+  var agora = Date.now(); toques = toques.filter(function(t){ return agora - t < 700; }); toques.push(agora);
+  if(toques.length >= 3){ toques = []; abrirAjustes(); }
+});
+function abrirAjustes(){
+  $("ver").textContent = "VERSO · versão " + VERSAO;
+  $("cUrl").value = CFG.url; $("cFmt").value = CFG.formato; $("cMs").value = CFG.toqueLongo;
+  $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas;
+  $("sheet").classList.add("on");
+}
+function lerAjustes(){
+  CFG.url = $("cUrl").value.trim() || PADRAO.url;
+  CFG.formato = $("cFmt").value || PADRAO.formato;
+  CFG.toqueLongo = Math.min(1500, Math.max(200, parseInt($("cMs").value,10) || PADRAO.toqueLongo));
+  CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked;
+  salvar();
+}
+$("bClose").addEventListener("click", function(){ lerAjustes(); $("sheet").classList.remove("on"); });
+$("bReset").addEventListener("click", function(){ CFG = Object.assign({}, PADRAO); salvar(); abrirAjustes(); });
+$("bTest").addEventListener("click", function(){ lerAjustes(); postar(montar("Música de teste","Artista","PALAVRA")); toast("Teste enviado ao Inject"); });
+$("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")){ lerAjustes(); $("sheet").classList.remove("on"); } });
+
+chips();
+</script>
+</body>
+</html>
