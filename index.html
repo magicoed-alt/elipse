@@ -186,6 +186,7 @@ body.song #song{display:block}
 
     <div class="row"><span>Mostrar o que foi enviado (teste)</span><input type="checkbox" id="cTest"></div>
     <div class="row"><span>Palavra em MAIÚSCULAS</span><input type="checkbox" id="cUpper"></div>
+    <div class="row"><span>Palavra pelo Telegram (música no Inject)</span><input type="checkbox" id="cTg"></div>
     <div class="row"><span>Enviar em 2 notificações (música; 5 s depois, ✱ palavra)</span><input type="checkbox" id="cDuas"></div>
 
     <div class="btns">
@@ -202,7 +203,7 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.0.2";
+var VERSAO = "1.1.0";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
@@ -211,8 +212,10 @@ var PADRAO = {
   toqueLongo: 450,                                    // ms segurando a palavra
   teste: false,                                       // mostra na tela o que foi enviado
   maiusculas: true,                                   // palavra em MAIÚSCULAS
-  novasTentativas: 3
+  novasTentativas: 3,
+  telegram: true                                      // true = música no Inject e palavra no Telegram (robô @versoed_bot)
 };
+var TG = { token: "9218844981:AAFYmYdG6sG7LBEvgn2MjzLVesNbZhUegZw", chat: "1231043433" };
 var API_LETRAS = "https://lrclib.net/api/search?q=";
 var POPULARES = ["Evidências","Garota de Ipanema","Imagine","Bohemian Rhapsody","Aquarela","Tempo Perdido","Perfect","Trem-Bala"];
 
@@ -238,6 +241,20 @@ function postar(texto, tentativa){
     });
   });
   if(CFG.teste) toast("ENVIADO ▸\n"+texto);
+}
+/* ---------- palavra para o Telegram (o MindtoneX lê a mensagem fixada) ---------- */
+function telegram(palavra){
+  var base = "https://api.telegram.org/bot" + TG.token + "/";
+  var url = base + "sendMessage?chat_id=" + TG.chat + "&text=" + encodeURIComponent(palavra);
+  fetch(url, {cache:"no-store", referrerPolicy:"no-referrer"})
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(!j || !j.ok) throw new Error("tg");
+    var pin = base + "pinChatMessage?chat_id=" + TG.chat + "&message_id=" + j.result.message_id + "&disable_notification=true";
+    return fetch(pin, {cache:"no-store", referrerPolicy:"no-referrer"});
+  })
+  .catch(function(){ if(CFG.teste) toast("Telegram: não confirmou o envio"); });   // sem reenviar (evita mensagem repetida)
+  if(CFG.teste) toast("TELEGRAM ▸\n"+palavra);
 }
 function montar(musica, artista, palavra){
   return CFG.formato.replace(/\{musica\}/g, musica).replace(/\{artista\}/g, artista).replace(/\{palavra\}/g, palavra);
@@ -382,7 +399,10 @@ function escolher(w){
   w.classList.add("sel"); selecionada = w;
   mostrarBalao(w);
   if(CFG.maiusculas) palavra = palavra.toLocaleUpperCase("pt-BR");
-  if(CFG.duasNotificacoes){
+  if(CFG.telegram){
+    postar(atual.trackName + " – " + atual.artistName);   // só a música vai para o Inject
+    telegram(palavra);                                     // a palavra vai para o Telegram
+  } else if(CFG.duasNotificacoes){
     postar(atual.trackName + " – " + atual.artistName);
     setTimeout(function(){ postar("✱ " + palavra); }, 5000);   // ✱ = o MindtoneX entende que é a palavra, não música
   } else {
@@ -419,6 +439,7 @@ function abrirAjustes(){
   $("ver").textContent = "VERSO · versão " + VERSAO;
   $("cUrl").value = CFG.url; $("cFmt").value = CFG.formato; $("cMs").value = CFG.toqueLongo;
   $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas; $("cDuas").checked = !!CFG.duasNotificacoes;
+  $("cTg").checked = !!CFG.telegram;
   $("sheet").classList.add("on");
 }
 function lerAjustes(){
@@ -426,11 +447,14 @@ function lerAjustes(){
   CFG.formato = $("cFmt").value || PADRAO.formato;
   CFG.toqueLongo = Math.min(1500, Math.max(200, parseInt($("cMs").value,10) || PADRAO.toqueLongo));
   CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked; CFG.duasNotificacoes = $("cDuas").checked;
+  CFG.telegram = $("cTg").checked;
   salvar();
 }
 $("bClose").addEventListener("click", function(){ lerAjustes(); $("sheet").classList.remove("on"); });
 $("bReset").addEventListener("click", function(){ CFG = Object.assign({}, PADRAO); salvar(); abrirAjustes(); });
-$("bTest").addEventListener("click", function(){ lerAjustes(); postar(montar("Música de teste","Artista","PALAVRA").replace(/\s*\n+\s*/g, " ▸ ")); toast("Teste enviado ao Inject"); });
+$("bTest").addEventListener("click", function(){ lerAjustes();
+  if(CFG.telegram){ postar("Música de teste – Artista"); telegram("PALAVRA"); toast("Teste: música no Inject, PALAVRA no Telegram"); return; }
+  postar(montar("Música de teste","Artista","PALAVRA").replace(/\s*\n+\s*/g, " ▸ ")); toast("Teste enviado ao Inject"); });
 $("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")){ lerAjustes(); $("sheet").classList.remove("on"); } });
 
 chips();
