@@ -178,14 +178,15 @@ body.song #song{display:block}
     <input type="text" id="cUrl" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
     <label for="cFmt">Formato da mensagem</label>
-    <textarea id="cFmt" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-    <div class="hint">Use {musica}, {artista} e {palavra}. Cada quebra de linha vai para a notificação.</div>
+    <input type="text" id="cFmt" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div class="hint">Use {musica}, {artista} e {palavra}. Fica tudo numa linha só, porque o Inject só mostra a primeira linha.</div>
 
     <label for="cMs">Tempo do toque longo (milissegundos)</label>
     <input type="number" id="cMs" inputmode="numeric" min="200" max="1500" step="50">
 
     <div class="row"><span>Mostrar o que foi enviado (teste)</span><input type="checkbox" id="cTest"></div>
     <div class="row"><span>Palavra em MAIÚSCULAS</span><input type="checkbox" id="cUpper"></div>
+    <div class="row"><span>Enviar em 2 notificações (música, depois a palavra)</span><input type="checkbox" id="cDuas"></div>
 
     <div class="btns">
       <button class="btn" id="bTest">Enviar teste</button>
@@ -201,11 +202,12 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.0.0";
+var VERSAO = "1.0.1";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
-  formato: "{musica} – {artista}\n\n{palavra}",       // o que chega na notificação
+  formato: "{musica} – {artista} ▸ {palavra}",         // tudo numa linha (o Inject só mostra a 1ª linha)
+  duasNotificacoes: false,                            // true = música numa notificação e palavra em outra
   toqueLongo: 450,                                    // ms segurando a palavra
   teste: false,                                       // mostra na tela o que foi enviado
   maiusculas: true,                                   // palavra em MAIÚSCULAS
@@ -216,9 +218,9 @@ var POPULARES = ["Evidências","Garota de Ipanema","Imagine","Bohemian Rhapsody"
 
 /* ---------- ajustes salvos ---------- */
 var CFG = Object.assign({}, PADRAO);
-try{ var s = JSON.parse(localStorage.getItem("verso.cfg")||"null"); if(s) Object.assign(CFG, s); }catch(e){}
+try{ var s = JSON.parse(localStorage.getItem("verso.cfg.v2")||"null"); if(s) Object.assign(CFG, s); }catch(e){}
 if(location.hash.indexOf("teste")>-1) CFG.teste = true;
-function salvar(){ try{ localStorage.setItem("verso.cfg", JSON.stringify(CFG)); }catch(e){} }
+function salvar(){ try{ localStorage.setItem("verso.cfg.v2", JSON.stringify(CFG)); }catch(e){} }
 
 var $ = function(id){ return document.getElementById(id); };
 
@@ -380,7 +382,12 @@ function escolher(w){
   w.classList.add("sel"); selecionada = w;
   mostrarBalao(w);
   if(CFG.maiusculas) palavra = palavra.toLocaleUpperCase("pt-BR");
-  postar(montar(atual.trackName, atual.artistName, palavra));
+  if(CFG.duasNotificacoes){
+    postar(atual.trackName + " – " + atual.artistName);
+    setTimeout(function(){ postar(palavra); }, 1500);
+  } else {
+    postar(montar(atual.trackName, atual.artistName, palavra).replace(/\s*\n+\s*/g, " ▸ "));
+  }
 }
 function mostrarBalao(w){
   var r = w.getBoundingClientRect(), c = $("callout");
@@ -411,19 +418,19 @@ logo.addEventListener("click", function(){
 function abrirAjustes(){
   $("ver").textContent = "VERSO · versão " + VERSAO;
   $("cUrl").value = CFG.url; $("cFmt").value = CFG.formato; $("cMs").value = CFG.toqueLongo;
-  $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas;
+  $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas; $("cDuas").checked = !!CFG.duasNotificacoes;
   $("sheet").classList.add("on");
 }
 function lerAjustes(){
   CFG.url = $("cUrl").value.trim() || PADRAO.url;
   CFG.formato = $("cFmt").value || PADRAO.formato;
   CFG.toqueLongo = Math.min(1500, Math.max(200, parseInt($("cMs").value,10) || PADRAO.toqueLongo));
-  CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked;
+  CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked; CFG.duasNotificacoes = $("cDuas").checked;
   salvar();
 }
 $("bClose").addEventListener("click", function(){ lerAjustes(); $("sheet").classList.remove("on"); });
 $("bReset").addEventListener("click", function(){ CFG = Object.assign({}, PADRAO); salvar(); abrirAjustes(); });
-$("bTest").addEventListener("click", function(){ lerAjustes(); postar(montar("Música de teste","Artista","PALAVRA")); toast("Teste enviado ao Inject"); });
+$("bTest").addEventListener("click", function(){ lerAjustes(); postar(montar("Música de teste","Artista","PALAVRA").replace(/\s*\n+\s*/g, " ▸ ")); toast("Teste enviado ao Inject"); });
 $("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")){ lerAjustes(); $("sheet").classList.remove("on"); } });
 
 chips();
