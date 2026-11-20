@@ -69,6 +69,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 /* ---------- Página da música ---------- */
 #song{display:none}
 body.song #home{display:none}
+body.boot #home{visibility:hidden}
 body.song #song{display:block}
 .shead{position:relative;color:#fff;padding:22px 16px 20px;overflow:hidden}
 .shead .bgc{position:absolute;inset:0;opacity:1}
@@ -181,6 +182,9 @@ body.song #song{display:block}
     <input type="text" id="cFmt" autocorrect="off" autocapitalize="off" spellcheck="false">
     <div class="hint">Use {musica}, {artista} e {palavra}. Fica tudo numa linha só. Para o MindtoneX, mantenha o ▸ antes de {palavra}: é ele que separa a música da palavra.</div>
 
+    <label for="cIni">Música que abre ao entrar no site</label>
+    <input type="text" id="cIni" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="vazio = abre na busca">
+
     <label for="cMs">Tempo do toque longo (milissegundos)</label>
     <input type="number" id="cMs" inputmode="numeric" min="200" max="1500" step="50">
 
@@ -204,7 +208,7 @@ body.song #song{display:block}
 /* =========================================================
    VERSO — letras de músicas  (webapp de mágica · Eduardo Braz)
    ========================================================= */
-var VERSAO = "1.2.0";
+var VERSAO = "1.3.0";
 
 var PADRAO = {
   url: "https://11z.co/_w/17794/selection",          // Inject do Eduardo
@@ -215,7 +219,8 @@ var PADRAO = {
   maiusculas: true,                                   // palavra em MAIÚSCULAS
   novasTentativas: 3,
   tgMensagem: false,                                  // true = também manda mensagem (com notificação) e fixa no Telegram
-  telegram: true                                      // true = música no Inject e palavra no Telegram (robô @versoed_bot)
+  telegram: true,                                     // true = música no Inject e palavra no Telegram (robô @versoed_bot)
+  musicaInicial: "Carla LS Jack"                      // música que já abre ao entrar no site ("" = abre na busca)
 };
 var TG = { token: "9218844981:AAFYmYdG6sG7LBEvgn2MjzLVesNbZhUegZw", chat: "1231043433" };
 var API_LETRAS = "https://lrclib.net/api/search?q=";
@@ -447,6 +452,7 @@ function abrirAjustes(){
   $("cUrl").value = CFG.url; $("cFmt").value = CFG.formato; $("cMs").value = CFG.toqueLongo;
   $("cTest").checked = !!CFG.teste; $("cUpper").checked = !!CFG.maiusculas; $("cDuas").checked = !!CFG.duasNotificacoes;
   $("cTg").checked = !!CFG.telegram; $("cTgMsg").checked = !!CFG.tgMensagem;
+  $("cIni").value = CFG.musicaInicial || "";
   $("sheet").classList.add("on");
 }
 function lerAjustes(){
@@ -455,6 +461,7 @@ function lerAjustes(){
   CFG.toqueLongo = Math.min(1500, Math.max(200, parseInt($("cMs").value,10) || PADRAO.toqueLongo));
   CFG.teste = $("cTest").checked; CFG.maiusculas = $("cUpper").checked; CFG.duasNotificacoes = $("cDuas").checked;
   CFG.telegram = $("cTg").checked; CFG.tgMensagem = $("cTgMsg").checked;
+  CFG.musicaInicial = $("cIni").value.trim();
   salvar();
 }
 $("bClose").addEventListener("click", function(){ lerAjustes(); $("sheet").classList.remove("on"); });
@@ -465,6 +472,32 @@ $("bTest").addEventListener("click", function(){ lerAjustes();
 $("sheet").addEventListener("click", function(e){ if(e.target === $("sheet")){ lerAjustes(); $("sheet").classList.remove("on"); } });
 
 chips();
+
+/* ---------- música inicial: abre direto na letra ---------- */
+function semAcento(t){ return (t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
+(function abrirInicial(){
+  var alvo = (CFG.musicaInicial || "").trim();
+  if(!alvo) return;
+  document.body.classList.add("boot");
+  var fim = function(){ document.body.classList.remove("boot"); };
+  var trava = setTimeout(fim, 6000);                    // se a internet demorar, mostra a busca
+  fetch(API_LETRAS + encodeURIComponent(alvo))
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(dados){
+      var lista = (dados||[]).filter(function(t){ return !t.instrumental && t.plainLyrics && t.plainLyrics.trim(); });
+      if(!lista.length) return;
+      var palavras = semAcento(alvo).split(/\s+/);
+      var nota = function(t){                            // a que tiver mais palavras do pedido no título+artista
+        var txt = semAcento(t.trackName + " " + t.artistName), n = 0;
+        palavras.forEach(function(p){ if(txt.indexOf(p) > -1) n++; });
+        return n * 10 - semAcento(t.trackName).length / 100;
+      };
+      lista.sort(function(a,b){ return nota(b) - nota(a); });
+      abrir(lista[0], true);
+    })
+    .catch(function(){})
+    .then(function(){ clearTimeout(trava); fim(); });
+})();
 </script>
 </body>
 </html>
